@@ -1,0 +1,308 @@
+{
+  "info": {
+    "name": "CivicFix API",
+    "_postman_id": "c1v1cf1x-0000-0000-0000-000000000001",
+    "description": "Full API collection for the CivicFix civic-complaint platform. Run 'Login' or 'Register' first -- access/refresh tokens are saved automatically to collection variables and reused by every other request.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://127.0.0.1:8000/api" },
+    { "key": "access_token", "value": "" },
+    { "key": "refresh_token", "value": "" },
+    { "key": "complaint_id", "value": "1" },
+    { "key": "department_id", "value": "1" },
+    { "key": "staff_id", "value": "1" },
+    { "key": "notification_id", "value": "1" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register (Citizen)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const data = pm.response.json();",
+                  "    pm.collectionVariables.set('access_token', data.access);",
+                  "    pm.collectionVariables.set('refresh_token', data.refresh);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"newcitizen@gmail.com\",\n  \"password\": \"StrongPass@123\",\n  \"first_name\": \"Test\",\n  \"last_name\": \"Citizen\",\n  \"phone\": \"9800000000\",\n  \"role\": \"citizen\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/register/", "host": ["{{base_url}}"], "path": ["auth", "register", ""] }
+          },
+          "auth": { "type": "noauth" }
+        },
+        {
+          "name": "Register (Department Staff)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const data = pm.response.json();",
+                  "    pm.collectionVariables.set('access_token', data.access);",
+                  "    pm.collectionVariables.set('refresh_token', data.refresh);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"newstaff@civicfix.local\",\n  \"password\": \"StrongPass@123\",\n  \"first_name\": \"New\",\n  \"last_name\": \"Staff\",\n  \"role\": \"department\",\n  \"department\": {{department_id}}\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/register/", "host": ["{{base_url}}"], "path": ["auth", "register", ""] }
+          },
+          "auth": { "type": "noauth" }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const data = pm.response.json();",
+                  "    pm.collectionVariables.set('access_token', data.access);",
+                  "    pm.collectionVariables.set('refresh_token', data.refresh);",
+                  "    console.log('Saved tokens for role:', data.user && data.user.role);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"citizen@civicfix.local\",\n  \"password\": \"Citizen@12345\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/login/", "host": ["{{base_url}}"], "path": ["auth", "login", ""] }
+          },
+          "auth": { "type": "noauth" }
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    pm.collectionVariables.set('access_token', pm.response.json().access);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"refresh\": \"{{refresh_token}}\"\n}" },
+            "url": { "raw": "{{base_url}}/auth/token/refresh/", "host": ["{{base_url}}"], "path": ["auth", "token", "refresh", ""] }
+          },
+          "auth": { "type": "noauth" }
+        },
+        {
+          "name": "Get My Profile",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/auth/me/", "host": ["{{base_url}}"], "path": ["auth", "me", ""] } }
+        },
+        {
+          "name": "Update My Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"first_name\": \"Updated\",\n  \"phone\": \"9811111111\"\n}" },
+            "url": { "raw": "{{base_url}}/auth/me/", "host": ["{{base_url}}"], "path": ["auth", "me", ""] }
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"old_password\": \"Citizen@12345\",\n  \"new_password\": \"NewPass@123\"\n}" },
+            "url": { "raw": "{{base_url}}/auth/change-password/", "host": ["{{base_url}}"], "path": ["auth", "change-password", ""] }
+          }
+        },
+        {
+          "name": "[Admin] List Staff",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/auth/staff/", "host": ["{{base_url}}"], "path": ["auth", "staff", ""] } }
+        },
+        {
+          "name": "[Admin] Create Department Staff",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"water.staff@civicfix.local\",\n  \"password\": \"Staff@12345\",\n  \"first_name\": \"Water\",\n  \"last_name\": \"Staff\",\n  \"role\": \"department\",\n  \"department\": {{department_id}}\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/staff/", "host": ["{{base_url}}"], "path": ["auth", "staff", ""] }
+          }
+        },
+        {
+          "name": "[Admin] List Citizens",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/auth/citizens/", "host": ["{{base_url}}"], "path": ["auth", "citizens", ""] } }
+        }
+      ]
+    },
+    {
+      "name": "Departments",
+      "item": [
+        {
+          "name": "List Departments",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/departments/", "host": ["{{base_url}}"], "path": ["departments", ""] } }
+        },
+        {
+          "name": "[Admin] Create Department",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Parks Department\",\n  \"category\": \"others\",\n  \"description\": \"Handles park maintenance\",\n  \"contact_email\": \"parks@civicfix.local\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/departments/", "host": ["{{base_url}}"], "path": ["departments", ""] }
+          }
+        },
+        {
+          "name": "Get Department",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/departments/{{department_id}}/", "host": ["{{base_url}}"], "path": ["departments", "{{department_id}}", ""] } }
+        },
+        {
+          "name": "[Admin] Update Department",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"contact_phone\": \"01-4444444\"\n}" },
+            "url": { "raw": "{{base_url}}/departments/{{department_id}}/", "host": ["{{base_url}}"], "path": ["departments", "{{department_id}}", ""] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Complaints",
+      "item": [
+        {
+          "name": "List My Complaints",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/complaints/", "host": ["{{base_url}}"], "path": ["complaints", ""] } }
+        },
+        {
+          "name": "Submit Complaint (with photo)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    pm.collectionVariables.set('complaint_id', pm.response.json().id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "title", "value": "Large pothole near market", "type": "text" },
+                { "key": "description", "value": "Deep pothole causing bike accidents at night.", "type": "text" },
+                { "key": "category", "value": "road_damage", "type": "text", "disabled": true, "description": "Optional - leave out/disabled to let AI auto-categorize" },
+                { "key": "latitude", "value": "27.6710", "type": "text" },
+                { "key": "longitude", "value": "85.3428", "type": "text" },
+                { "key": "photo", "type": "file", "src": [] }
+              ]
+            },
+            "url": { "raw": "{{base_url}}/complaints/", "host": ["{{base_url}}"], "path": ["complaints", ""] }
+          }
+        },
+        {
+          "name": "Get Complaint Detail",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/complaints/{{complaint_id}}/", "host": ["{{base_url}}"], "path": ["complaints", "{{complaint_id}}", ""] } }
+        },
+        {
+          "name": "Filter Complaints (status/category/emergency)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/complaints/?status=pending&category=road_damage&is_emergency=false",
+              "host": ["{{base_url}}"], "path": ["complaints", ""],
+              "query": [
+                { "key": "status", "value": "pending" },
+                { "key": "category", "value": "road_damage" },
+                { "key": "is_emergency", "value": "false" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "[Dept/Admin] Update Status",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"in_progress\",\n  \"note\": \"Team dispatched to inspect the site.\"\n}" },
+            "url": { "raw": "{{base_url}}/complaints/{{complaint_id}}/status/", "host": ["{{base_url}}"], "path": ["complaints", "{{complaint_id}}", "status", ""] }
+          }
+        },
+        {
+          "name": "List Updates",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/complaints/{{complaint_id}}/updates/", "host": ["{{base_url}}"], "path": ["complaints", "{{complaint_id}}", "updates", ""] } }
+        },
+        {
+          "name": "[Dept/Admin] Post Update",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"message\": \"Repair crew scheduled for tomorrow morning.\"\n}" },
+            "url": { "raw": "{{base_url}}/complaints/{{complaint_id}}/updates/", "host": ["{{base_url}}"], "path": ["complaints", "{{complaint_id}}", "updates", ""] }
+          }
+        },
+        {
+          "name": "Dashboard Stats",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/complaints/stats/", "host": ["{{base_url}}"], "path": ["complaints", "stats", ""] } }
+        },
+        {
+          "name": "List Notifications",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/complaints/notifications/", "host": ["{{base_url}}"], "path": ["complaints", "notifications", ""] } }
+        },
+        {
+          "name": "Mark Notification Read",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{base_url}}/complaints/notifications/{{notification_id}}/read/", "host": ["{{base_url}}"], "path": ["complaints", "notifications", "{{notification_id}}", "read", ""] }
+          }
+        }
+      ]
+    }
+  ]
+}

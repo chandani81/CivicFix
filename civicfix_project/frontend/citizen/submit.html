@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Report an Issue — CivicFix</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+</head>
+
+<body>
+  <div class="app-shell">
+    <nav class="sidebar" id="sidebar"></nav>
+    <main class="main">
+      <div class="page-head">
+        <div>
+          <h1>Report an issue</h1>
+          <p>Give us the details — CivicFix routes it to the right department automatically.</p>
+        </div>
+        <a href="dashboard.html" class="btn btn-ghost">← Back to my complaints</a>
+      </div>
+
+      <div class="detail-grid">
+        <form id="complaint-form">
+          <div class="panel">
+            <h3>What's the issue?</h3>
+            <div class="field">
+              <label for="title">Title</label>
+              <input type="text" id="title" required placeholder="e.g. Large pothole near the market">
+            </div>
+            <div class="field">
+              <label for="description">Description</label>
+              <textarea id="description" required
+                placeholder="Describe what you saw, how severe it looks, and anything else that helps the department act fast."></textarea>
+            </div>
+            <div class="field">
+              <label for="category">Category</label>
+              <select id="category">
+                <option value="">Let AI auto-detect from my description</option>
+                <option value="road_damage">Road Damage</option>
+                <option value="water_leakage">Water Leakage</option>
+                <option value="garbage">Garbage</option>
+                <option value="street_light">Street Light</option>
+                <option value="drainage">Drainage</option>
+                <option value="others">Others</option>
+              </select>
+              <div class="hint">Leave on auto-detect if you're not sure — CivicFix reads your description and picks the
+                closest category.</div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h3>Photo</h3>
+            <label for="photo" class="file-drop" id="file-drop">
+              📷 Click to upload a photo of the issue<br><span style="font-size:11px;">Our AI scans it to flag likely
+                emergencies</span>
+              <div id="preview-wrap"></div>
+            </label>
+            <input type="file" id="photo" accept="image/*" class="hidden">
+          </div>
+
+          <div class="panel">
+            <h3>Location</h3>
+            <p class="hint" style="margin-top:-8px; margin-bottom:10px;">Click on the map to drop a pin where the issue
+              is.</p>
+            <div id="map-picker"></div>
+            <div class="field" style="margin-top:12px;">
+              <label for="address">Address / landmark</label>
+              <input type="text" id="address" placeholder="Auto-filled from the map, or type your own">
+            </div>
+          </div>
+
+          <div id="form-error" class="error-text hidden"></div>
+          <button type="submit" class="btn btn-primary btn-block" id="submit-btn">Submit complaint</button>
+        </form>
+
+        <div>
+          <div class="panel">
+            <h3>How this gets handled</h3>
+            <ul class="timeline">
+              <li>
+                <div class="t-status">1. Auto-routed</div>
+                <div class="t-note">Your category maps straight to the responsible department.</div>
+              </li>
+              <li>
+                <div class="t-status">2. AI triage</div>
+                <div class="t-note">Your photo and description are checked for emergency signals.</div>
+              </li>
+              <li>
+                <div class="t-status">3. Tracked</div>
+                <div class="t-note">Follow status from Pending → In Progress → Resolved, with updates from the
+                  department.</div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/layout.js"></script>
+  <script>
+    const user = requireAuth(["citizen"]);
+    let map, marker;
+    let selectedLat = null, selectedLng = null;
+
+    if (user) {
+      renderSidebar("submit.html", user);
+      initMap();
+    }
+
+    function initMap() {
+      const defaultCenter = [27.7172, 85.3240]; // Kathmandu
+      map = L.map("map-picker").setView(defaultCenter, 13);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "&copy; OpenStreetMap contributors",
+        maxZoom: 19,
+      }).addTo(map);
+
+      map.on("click", (e) => {
+        setMarker(e.latlng.lat, e.latlng.lng);
+      });
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            map.setView([pos.coords.latitude, pos.coords.longitude], 15);
+          },
+          () => { /* ignore — keep default view */ }
+        );
+      }
+    }
+
+    function setMarker(lat, lng) {
+      selectedLat = lat;
+      selectedLng = lng;
+      if (marker) marker.setLatLng([lat, lng]);
+      else marker = L.marker([lat, lng]).addTo(map);
+    }
+
+    document.getElementById("file-drop").addEventListener("click", () => document.getElementById("photo").click());
+    document.getElementById("photo").addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      const wrap = document.getElementById("preview-wrap");
+      const dropEl = document.getElementById("file-drop");
+      if (!file) { wrap.innerHTML = ""; return; }
+      dropEl.classList.add("has-file");
+      const reader = new FileReader();
+      reader.onload = (ev) => { wrap.innerHTML = `<img src="${ev.target.result}" alt="preview">`; };
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById("complaint-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById("submit-btn");
+      const errEl = document.getElementById("form-error");
+      errEl.classList.add("hidden");
+      btn.disabled = true;
+      btn.textContent = "Submitting…";
+
+      try {
+        const fd = new FormData();
+        fd.append("title", document.getElementById("title").value.trim());
+        fd.append("description", document.getElementById("description").value.trim());
+        const category = document.getElementById("category").value;
+        if (category) fd.append("category", category);
+        const address = document.getElementById("address").value.trim();
+        if (address) fd.append("address", address);
+        if (selectedLat != null) fd.append("latitude", selectedLat);
+        if (selectedLng != null) fd.append("longitude", selectedLng);
+        const photoFile = document.getElementById("photo").files[0];
+        if (photoFile) fd.append("photo", photoFile);
+
+        const created = await Api.createComplaint(fd);
+        toast("Complaint submitted successfully.");
+        window.location.href = `complaint.html?id=${created.id}`;
+      } catch (err) {
+        errEl.textContent = err.message;
+        errEl.classList.remove("hidden");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Submit complaint";
+      }
+    });
+  </script>
+</body>
+
+</html>

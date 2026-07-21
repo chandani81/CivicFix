@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Assigned Complaints — CivicFix</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+
+<body>
+  <div class="app-shell">
+    <nav class="sidebar" id="sidebar"></nav>
+    <main class="main">
+      <div class="page-head">
+        <div>
+          <h1>Assigned complaints</h1>
+          <p id="dept-label">Complaints routed to your department.</p>
+        </div>
+      </div>
+
+      <div class="stat-grid" id="stat-grid"></div>
+
+      <div class="filter-row" id="filter-row">
+        <div class="chip active" data-status="">All</div>
+        <div class="chip" data-stzatus="pending">Pending</div>
+        <div class="chip" data-status="in_progress">In Progress</div>
+        <div class="chip" data-status="resolved">Resolved</div>
+        <div style="flex:1;"></div>
+        <div class="chip" data-emergency="true" id="emergency-chip">🚨 Emergencies only</div>
+      </div>
+
+      <div class="complaint-list" id="complaint-list">
+        <div class="empty-state">Loading complaints…</div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/layout.js"></script>
+  <script>
+    const user = requireAuth(["department"]);
+    let currentStatus = "";
+    let emergencyOnly = false;
+
+    if (user) {
+      renderSidebar("dashboard.html", user);
+      document.getElementById("dept-label").textContent = user.department_name
+        ? `Complaints routed to ${user.department_name}.`
+        : "Complaints routed to your department.";
+      loadStats();
+      loadComplaints();
+    }
+
+    document.querySelectorAll("#filter-row .chip[data-status]").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        document.querySelectorAll("#filter-row .chip[data-status]").forEach((c) => c.classList.remove("active"));
+        chip.classList.add("active");
+        currentStatus = chip.dataset.status;
+        loadComplaints();
+      });
+    });
+
+    document.getElementById("emergency-chip").addEventListener("click", (e) => {
+      emergencyOnly = !emergencyOnly;
+      e.target.classList.toggle("active", emergencyOnly);
+      loadComplaints();
+    });
+
+    async function loadStats() {
+      try {
+        const s = await Api.stats();
+        document.getElementById("stat-grid").innerHTML = `
+        <div class="stat-card"><b>${s.total}</b><span>Assigned total</span></div>
+        <div class="stat-card"><b>${s.pending}</b><span>Pending</span></div>
+        <div class="stat-card"><b>${s.in_progress}</b><span>In progress</span></div>
+        <div class="stat-card"><b>${s.resolved}</b><span>Resolved</span></div>
+        <div class="stat-card emergency"><b>${s.emergency}</b><span>Emergencies</span></div>
+      `;
+      } catch (e) { /* non-fatal */ }
+    }
+
+    async function loadComplaints() {
+      const listEl = document.getElementById("complaint-list");
+      listEl.innerHTML = `<div class="empty-state">Loading…</div>`;
+      try {
+        const parts = [];
+        if (currentStatus) parts.push(`status=${currentStatus}`);
+        if (emergencyOnly) parts.push(`is_emergency=true`);
+        const query = parts.length ? `?${parts.join("&")}` : "";
+        const data = await Api.listComplaints(query);
+        const results = data.results || data;
+        if (!results.length) {
+          listEl.innerHTML = `<div class="empty-state"><div class="glyph">✅</div>Nothing here — you're all caught up.</div>`;
+          return;
+        }
+        listEl.innerHTML = results.map(renderComplaintCard).join("");
+        listEl.querySelectorAll(".complaint-card").forEach((card) => {
+          card.addEventListener("click", () => { window.location.href = `complaint.html?id=${card.dataset.id}`; });
+        });
+      } catch (err) {
+        listEl.innerHTML = `<div class="empty-state">Couldn't load complaints: ${escapeHtml(err.message)}</div>`;
+      }
+    }
+
+    function renderComplaintCard(c) {
+      return `
+      <div class="complaint-card status-${c.status} ${c.is_emergency ? "is-emergency" : ""}" data-id="${c.id}">
+        <div class="cc-main">
+          <div class="cc-title">${escapeHtml(c.title)}</div>
+          <div class="cc-meta">#${c.id} · reported by ${escapeHtml(c.citizen_email)} · ${timeAgo(c.created_at)}</div>
+        </div>
+        <div class="cc-right">
+          ${c.is_emergency ? `<span class="badge-emergency">Emergency</span>` : ""}
+          <span class="pill">${CATEGORY_LABELS[c.category] || c.category}</span>
+          <div class="stamp small status-${c.status}">${STATUS_LABELS[c.status]}</div>
+        </div>
+      </div>
+    `;
+    }
+  </script>
+</body>
+
+</html>

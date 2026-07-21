@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Departments & Staff — CivicFix</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+
+<body>
+  <div class="app-shell">
+    <nav class="sidebar" id="sidebar"></nav>
+    <main class="main">
+      <div class="page-head">
+        <div>
+          <h1>Departments & staff</h1>
+          <p>Manage the departments complaints route to, and who staffs them.</p>
+        </div>
+      </div>
+
+      <div class="detail-grid">
+        <div>
+          <div class="panel">
+            <h3>Departments</h3>
+            <table class="data-table" id="dept-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Category</th>
+                  <th>Staff</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="4" class="hint">Loading…</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="panel">
+            <h3>Staff & admin accounts</h3>
+            <table class="data-table" id="staff-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Department</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="5" class="hint">Loading…</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div>
+          <div class="panel">
+            <h3>Add department</h3>
+            <form id="dept-form">
+              <div class="field">
+                <label for="dept-name">Name</label>
+                <input type="text" id="dept-name" required placeholder="e.g. Parks Department">
+              </div>
+              <div class="field">
+                <label for="dept-category">Category it handles</label>
+                <select id="dept-category" required>
+                  <option value="road_damage">Road Damage</option>
+                  <option value="water_leakage">Water Leakage</option>
+                  <option value="garbage">Garbage</option>
+                  <option value="street_light">Street Light</option>
+                  <option value="drainage">Drainage</option>
+                  <option value="others">Others</option>
+                </select>
+                <div class="hint">One department per category — complaints route here automatically.</div>
+              </div>
+              <div class="field">
+                <label for="dept-email">Contact email</label>
+                <input type="email" id="dept-email">
+              </div>
+              <button class="btn btn-primary btn-block" type="submit">Create department</button>
+            </form>
+          </div>
+
+          <div class="panel">
+            <h3>Add staff or admin</h3>
+            <form id="staff-form">
+              <div class="field">
+                <label for="staff-first">First name</label>
+                <input type="text" id="staff-first" required>
+              </div>
+              <div class="field">
+                <label for="staff-email">Email</label>
+                <input type="email" id="staff-email" required>
+              </div>
+              <div class="field">
+                <label for="staff-password">Temporary password</label>
+                <input type="password" id="staff-password" required minlength="8">
+              </div>
+              <div class="field">
+                <label for="staff-role">Role</label>
+                <select id="staff-role">
+                  <option value="department">Department Staff</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              <div class="field" id="staff-dept-field">
+                <label for="staff-department">Department</label>
+                <select id="staff-department"></select>
+              </div>
+              <button class="btn btn-primary btn-block" type="submit">Create account</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/layout.js"></script>
+  <script>
+    const user = requireAuth(["admin"]);
+    let departmentsCache = [];
+
+    if (user) {
+      renderSidebar("departments.html", user);
+      loadDepartments();
+      loadStaff();
+    }
+
+    document.getElementById("staff-role").addEventListener("change", (e) => {
+      document.getElementById("staff-dept-field").style.display = e.target.value === "department" ? "block" : "none";
+    });
+
+    async function loadDepartments() {
+      const tbody = document.querySelector("#dept-table tbody");
+      try {
+        const data = await Api.listDepartments();
+        departmentsCache = data.results || data;
+        tbody.innerHTML = departmentsCache.map((d) => `
+        <tr>
+          <td>${escapeHtml(d.name)}</td>
+          <td><span class="pill">${escapeHtml(d.category_display)}</span></td>
+          <td>${d.staff_count}</td>
+          <td>${d.is_active ? "Active" : "Inactive"}</td>
+        </tr>
+      `).join("") || `<tr><td colspan="4" class="hint">No departments yet.</td></tr>`;
+
+        const deptSelect = document.getElementById("staff-department");
+        deptSelect.innerHTML = departmentsCache.map((d) => `<option value="${d.id}">${escapeHtml(d.name)}</option>`).join("");
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="4" class="hint">Couldn't load departments.</td></tr>`;
+      }
+    }
+
+    async function loadStaff() {
+      const tbody = document.querySelector("#staff-table tbody");
+      try {
+        const data = await Api.listStaff();
+        const results = data.results || data;
+        tbody.innerHTML = results.map((s) => `
+        <tr>
+          <td>${escapeHtml(s.first_name || "—")} ${escapeHtml(s.last_name || "")}</td>
+          <td>${escapeHtml(s.email)}</td>
+          <td>${roleLabel(s.role)}</td>
+          <td>${escapeHtml(s.department_name || "—")}</td>
+          <td><button class="link-btn" data-id="${s.id}" style="color:var(--red);">Remove</button></td>
+        </tr>
+      `).join("") || `<tr><td colspan="5" class="hint">No staff accounts yet.</td></tr>`;
+
+        tbody.querySelectorAll("button[data-id]").forEach((btn) => {
+          btn.addEventListener("click", async () => {
+            if (!confirm("Remove this account?")) return;
+            try {
+              await Api.deleteStaff(btn.dataset.id);
+              toast("Account removed.");
+              loadStaff();
+            } catch (err) { toast(err.message, "error"); }
+          });
+        });
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="5" class="hint">Couldn't load staff.</td></tr>`;
+      }
+    }
+
+    document.getElementById("dept-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      try {
+        await Api.createDepartment({
+          name: document.getElementById("dept-name").value.trim(),
+          category: document.getElementById("dept-category").value,
+          contact_email: document.getElementById("dept-email").value.trim(),
+        });
+        toast("Department created.");
+        e.target.reset();
+        loadDepartments();
+      } catch (err) { toast(err.message, "error"); }
+    });
+
+    document.getElementById("staff-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const role = document.getElementById("staff-role").value;
+      const payload = {
+        first_name: document.getElementById("staff-first").value.trim(),
+        email: document.getElementById("staff-email").value.trim(),
+        password: document.getElementById("staff-password").value,
+        role,
+      };
+      if (role === "department") payload.department = Number(document.getElementById("staff-department").value);
+      try {
+        await Api.createStaff(payload);
+        toast("Account created.");
+        e.target.reset();
+        loadStaff();
+      } catch (err) { toast(err.message, "error"); }
+    });
+  </script>
+
+</html>

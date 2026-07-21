@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Overview — CivicFix</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+
+<body>
+  <div class="app-shell">
+    <nav class="sidebar" id="sidebar"></nav>
+    <main class="main">
+      <div class="page-head">
+        <div>
+          <h1>overview</h1>
+
+        </div>
+        <a href="complaints.html" class="btn btn-ghost">View all complaints →</a>
+      </div>
+
+      <div class="stat-grid" id="stat-grid"></div>
+
+      <div class="detail-grid">
+        <div class="panel">
+          <h3>Emergency complaints</h3>
+          <div class="complaint-list" id="emergency-list">
+            <div class="hint">Loading…</div>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>Departments</h3>
+          <table class="data-table" id="dept-table">
+            <thead>
+              <tr>
+                <th>Department</th>
+                <th>Staff</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="3" class="hint">Loading…</td>
+              </tr>
+            </tbody>
+          </table>
+          <a href="departments.html" class="link-btn" style="margin-top:12px; display:inline-block;">Manage departments
+            & staff →</a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/layout.js"></script>
+  <script>
+    const user = requireAuth(["admin"]);
+    if (user) {
+      renderSidebar("dashboard.html", user);
+      loadStats();
+      loadEmergencies();
+      loadDepartments();
+    }
+
+    async function loadStats() {
+      try {
+        const s = await Api.stats();
+        document.getElementById("stat-grid").innerHTML = `
+        <div class="stat-card"><b>${s.total}</b><span>Total complaints</span></div>
+        <div class="stat-card"><b>${s.pending}</b><span>Pending</span></div>
+        <div class="stat-card"><b>${s.in_progress}</b><span>In progress</span></div>
+        <div class="stat-card"><b>${s.resolved}</b><span>Resolved</span></div>
+        <div class="stat-card emergency"><b>${s.emergency}</b><span>Emergencies</span></div>
+      `;
+      } catch (e) { /* non-fatal */ }
+    }
+
+    async function loadEmergencies() {
+      const el = document.getElementById("emergency-list");
+      try {
+        const data = await Api.listComplaints("?is_emergency=true");
+        const results = data.results || data;
+        if (!results.length) {
+          el.innerHTML = `<div class="hint">No emergencies flagged right now. 🎉</div>`;
+          return;
+        }
+        el.innerHTML = results.slice(0, 8).map((c) => `
+        <div class="complaint-card is-emergency" data-id="${c.id}">
+          <div class="cc-main">
+            <div class="cc-title">${escapeHtml(c.title)}</div>
+            <div class="cc-meta">#${c.id} · ${escapeHtml(c.department_name || "Unassigned")} · ${timeAgo(c.created_at)}</div>
+          </div>
+          <div class="stamp small status-${c.status}">${STATUS_LABELS[c.status]}</div>
+        </div>
+      `).join("");
+        el.querySelectorAll(".complaint-card").forEach((card) => {
+          card.addEventListener("click", () => { window.location.href = `complaint.html?id=${card.dataset.id}`; });
+        });
+      } catch (err) {
+        el.innerHTML = `<div class="hint">Couldn't load emergencies.</div>`;
+      }
+    }
+
+    async function loadDepartments() {
+      const tbody = document.querySelector("#dept-table tbody");
+      try {
+        const data = await Api.listDepartments();
+        const results = data.results || data;
+        tbody.innerHTML = results.map((d) => `
+        <tr>
+          <td>${escapeHtml(d.name)}</td>
+          <td>${d.staff_count}</td>
+          <td>${d.is_active ? "Active" : "Inactive"}</td>
+        </tr>
+      `).join("");
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="3" class="hint">Couldn't load departments.</td></tr>`;
+      }
+    }
+  </script>
+
+</body>
+
+</html>

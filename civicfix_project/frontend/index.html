@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CivicFix — Log in</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+
+<body>
+  <div class="auth-shell">
+    <div class="auth-side">
+      <div class="brand-mark">
+        <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+          <path d="M13 1L24 7V13C24 19.5 19.5 24 13 25C6.5 24 2 19.5 2 13V7L13 1Z" stroke="#fff" stroke-width="1.6" />
+          <path d="M9 13.5L11.8 16.3L17.5 10" stroke="#E2932F" stroke-width="1.8" stroke-linecap="round"
+            stroke-linejoin="round" />
+        </svg>
+        CivicFix
+      </div>
+      <div>
+        <h1>Report it. Route it. Resolve it.</h1>
+        <p>One record for every road, drain, and streetlight complaint in the city — from the citizen who spots it to
+          the department that fixes it.</p>
+      </div>
+      <div class="auth-stat-row">
+        <div class="auth-stat"><b>6</b><span>Categories tracked</span></div>
+        <div class="auth-stat"><b>3</b><span>Status stages</span></div>
+        <div class="auth-stat"><b>AI</b><span>Auto-triage</span></div>
+      </div>
+    </div>
+
+    <div class="auth-main">
+      <div class="auth-card">
+        <h2>Welcome back</h2>
+        <p class="subtitle">Log in to your CivicFix account.</p>
+
+        <form id="login-form">
+          <div class="field">
+            <label for="email">Email</label>
+            <input type="email" id="email" required placeholder="you@example.com">
+          </div>
+          <div class="field">
+            <label for="password">Password</label>
+            <input type="password" id="password" required placeholder="••••••••">
+          </div>
+          <div id="form-error" class="error-text hidden"></div>
+          <button type="submit" class="btn btn-primary btn-block" id="login-btn">Log in</button>
+        </form>
+
+        <div class="auth-foot">
+          New here? <a href="register.html">Create an account</a>
+        </div>
+        <div class="auth-foot" style="margin-top:6px; font-size:12px;">
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/api.js"></script>
+  <script>
+    if (Auth.isLoggedIn()) {
+      const u = Auth.getUser();
+      redirectByRole(u ? u.role : null);
+    }
+
+    function redirectByRole(role) {
+      if (role === "admin") window.location.href = "admin/dashboard.html";
+      else if (role === "department") window.location.href = "department/dashboard.html";
+      else window.location.href = "citizen/dashboard.html";
+    }
+
+    document.getElementById("login-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById("login-btn");
+      const errEl = document.getElementById("form-error");
+      errEl.classList.add("hidden");
+      btn.disabled = true;
+      btn.textContent = "Logging in…";
+
+      try {
+        const data = await Api.login({
+          email: document.getElementById("email").value.trim(),
+          password: document.getElementById("password").value,
+        });
+        Auth.setSession(data.access, data.refresh, data.user);
+        toast(`Welcome, ${data.user.first_name || data.user.email}`);
+        redirectByRole(data.user.role);
+      } catch (err) {
+        errEl.textContent = err.message;
+        errEl.classList.remove("hidden");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Log in";
+      }
+    });
+  </script>
+</body>
+
+</html>
