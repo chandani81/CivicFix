@@ -11,7 +11,9 @@ class Department(models.Model):
         ROAD_DAMAGE = "road_damage", "Road Damage"
         WATER_LEAKAGE = "water_leakage", "Water Leakage"
         GARBAGE = "garbage", "Garbage"
-        STREET_LIGHT = "street_light", "Street Light"
+        # Stored value stays "street_light" for backward compatibility with
+        # existing complaints and the trained classifier.
+        STREET_LIGHT = "street_light", "Electricity"
         DRAINAGE = "drainage", "Drainage"
         OTHERS = "others", "Others"
 

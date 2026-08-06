@@ -1,0 +1,22 @@
+{
+  "trained_at": "2026-08-06T16:30:00.845246+00:00",
+  "training_examples": 90,
+  "class_counts": {
+    "drainage": 15,
+    "garbage": 15,
+    "others": 15,
+    "road_damage": 15,
+    "street_light": 15,
+    "water_leakage": 15
+  },
+  "holdout_accuracy": 0.9565,
+  "cross_validation_accuracy": 0.9,
+  "cross_validation_scores": [
+    1.0,
+    0.8889,
+    0.7778,
+    0.9444,
+    0.8889
+  ],
+  "model": "TF-IDF word/character features with LinearSVC"
+}

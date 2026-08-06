@@ -1,4 +1,5 @@
 from django.utils import timezone
+from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
@@ -11,6 +12,7 @@ from ai_services.location_service import reverse_geocode
 from departments.models import Department
 
 from .models import Complaint, ComplaintStatusHistory, ComplaintUpdate, Notification
+from .email_routing import send_department_complaint_email
 from .permissions import CanUpdateStatus, IsComplaintParticipant
 from .serializers import (
     ComplaintCreateSerializer,
@@ -56,11 +58,14 @@ class ComplaintListCreateView(generics.ListCreateAPIView):
         user = self.request.user
         qs = Complaint.objects.select_related("department", "citizen")
 
+        if user.is_admin_role:
+            return qs
         if user.is_citizen:
             qs = qs.filter(citizen=user)
         elif user.is_department_staff:
             qs = qs.filter(department=user.department)
-        # admin sees everything
+        else:
+            qs = qs.none()
 
         return qs
 
@@ -125,6 +130,10 @@ class ComplaintListCreateView(generics.ListCreateAPIView):
                     f"AI flagged an EMERGENCY complaint: {complaint.title}", complaint,
                 )
 
+        # The complaint already exists before email is attempted. A missing
+        # address or SMTP outage is recorded for retry and never loses the report.
+        send_department_complaint_email(complaint)
+
 
 def _admin_users():
     from django.contrib.auth import get_user_model
@@ -165,9 +174,20 @@ class ComplaintStatusUpdateView(APIView):
         new_status = serializer.validated_data["status"]
         note = serializer.validated_data.get("note", "")
 
+        if new_status == complaint.status:
+            return Response(
+                {"status": "Complaint is already in this status."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         complaint.status = new_status
         if new_status == Complaint.Status.RESOLVED:
             complaint.resolved_at = timezone.now()
+        else:
+            # If an administrator/department corrects a resolved complaint
+            # back to an active state, it must no longer carry a stale
+            # resolution timestamp.
+            complaint.resolved_at = None
         complaint.save(update_fields=["status", "resolved_at", "updated_at"])
 
         ComplaintStatusHistory.objects.create(
@@ -194,12 +214,13 @@ class ComplaintUpdateListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated, IsComplaintParticipant]
 
     def get_complaint(self):
-        complaint = Complaint.objects.get(pk=self.kwargs["pk"])
+        complaint = get_object_or_404(Complaint, pk=self.kwargs["pk"])
         self.check_object_permissions(self.request, complaint)
         return complaint
 
     def get_queryset(self):
-        return ComplaintUpdate.objects.filter(complaint_id=self.kwargs["pk"])
+        complaint = self.get_complaint()
+        return ComplaintUpdate.objects.filter(complaint=complaint)
 
     def perform_create(self, serializer):
         complaint = self.get_complaint()
@@ -251,10 +272,14 @@ class DashboardStatsView(APIView):
     def get(self, request):
         user = request.user
         qs = Complaint.objects.all()
-        if user.is_citizen:
+        if user.is_admin_role:
+            pass
+        elif user.is_citizen:
             qs = qs.filter(citizen=user)
         elif user.is_department_staff:
             qs = qs.filter(department=user.department)
+        else:
+            qs = qs.none()
 
         data = {
             "total": qs.count(),

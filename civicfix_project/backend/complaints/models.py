@@ -13,7 +13,8 @@ class Complaint(models.Model):
         ROAD_DAMAGE = "road_damage", "Road Damage"
         WATER_LEAKAGE = "water_leakage", "Water Leakage"
         GARBAGE = "garbage", "Garbage"
-        STREET_LIGHT = "street_light", "Street Light"
+        # Keep the stored key so existing records and integrations remain valid.
+        STREET_LIGHT = "street_light", "Electricity"
         DRAINAGE = "drainage", "Drainage"
         OTHERS = "others", "Others"
 
@@ -45,6 +46,13 @@ class Complaint(models.Model):
     emergency_confidence = models.FloatField(default=0.0)
     emergency_reason = models.CharField(max_length=255, blank=True)
     auto_categorized = models.BooleanField(default=False)
+
+    # Audit fields for the email produced after AI/category routing. Email
+    # delivery is deliberately separate from complaint persistence so an SMTP
+    # outage never causes a citizen's report to be lost.
+    department_email_recipient = models.EmailField(blank=True)
+    department_email_sent_at = models.DateTimeField(blank=True, null=True)
+    department_email_error = models.CharField(max_length=500, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

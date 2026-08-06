@@ -1,0 +1,91 @@
+text,category
+"Deep pothole in the middle of Ring Road is damaging motorcycles",road_damage
+"The asphalt surface has broken apart near the bus stop",road_damage
+"Large cracks have appeared across the main road",road_damage
+"A section of pavement has collapsed beside the market",road_damage
+"Broken footpath makes it unsafe for pedestrians",road_damage
+"Loose gravel and damaged blacktop are causing accidents",road_damage
+"Road surface washed away after yesterday's rain",road_damage
+"Dangerous hole on the highway needs immediate repair",road_damage
+"Uneven speed breaker is scraping cars",road_damage
+"Sidewalk tiles are shattered outside the school",road_damage
+"The lane is full of deep ruts and broken asphalt",road_damage
+"Bridge approach road has cracked and sunk",road_damage
+"A missing manhole cover has left a hole in the roadway",road_damage
+"The intersection pavement is badly damaged",road_damage
+"Vehicles are swerving around a large road cavity",road_damage
+"A drinking water pipe is leaking under the street",water_leakage
+"Burst supply line is wasting clean water",water_leakage
+"No water has reached our neighborhood since morning",water_leakage
+"Water pressure is extremely low in every house",water_leakage
+"The public tap is continuously leaking",water_leakage
+"Contaminated brown water is coming from household taps",water_leakage
+"A broken main is spraying water beside the hospital",water_leakage
+"Underground pipeline leak has flooded the sidewalk",water_leakage
+"There is no drinking water supply in the ward",water_leakage
+"Valve chamber is overflowing with clean water",water_leakage
+"Water meter connection is dripping heavily",water_leakage
+"Supply pipe burst near the community hall",water_leakage
+"Residents are receiving muddy water from the municipal line",water_leakage
+"A reservoir outlet leak is wasting thousands of litres",water_leakage
+"The distribution pipe has cracked near our gate",water_leakage
+"Garbage has not been collected for a week",garbage
+"Overflowing rubbish bins are blocking the footpath",garbage
+"People are dumping household waste beside the river",garbage
+"Rotting trash is creating a terrible smell",garbage
+"The public dustbin is full and spilling onto the road",garbage
+"Construction debris was illegally dumped in the park",garbage
+"Waste collection vehicle missed our entire neighborhood",garbage
+"Plastic litter covers the open ground",garbage
+"A pile of rubbish is attracting dogs and insects",garbage
+"Market waste remains scattered after closing time",garbage
+"Medical waste bags were left near residential homes",garbage
+"The roadside dumping site needs to be cleared",garbage
+"Uncollected food waste is attracting rats",garbage
+"Broken furniture and trash were abandoned in the lane",garbage
+"The community bin needs urgent emptying",garbage
+"The neighborhood has a complete electricity outage",street_light
+"A transformer exploded and power supply has stopped",street_light
+"Exposed electrical wires are hanging from the pole",street_light
+"The electric pole is sparking beside the school",street_light
+"Repeated power cuts are affecting the entire ward",street_light
+"A fallen power line is creating a serious hazard",street_light
+"The electricity distribution box is damaged",street_light
+"There is no power supply in the community building",street_light
+"A damaged light pole is leaning toward the road",street_light
+"Street illumination timer is switching off too early",street_light
+"Public lamp remains on during daytime and off at night",street_light
+"Broken electrical box beneath the streetlight is dangerous",street_light
+"Dark bus stop needs its municipal light repaired",street_light
+"Three consecutive lamp posts are not functioning",street_light
+"The pole light sparks whenever it rains",street_light
+"Blocked drain is overflowing onto the road",drainage
+"Sewage is coming out of a manhole",drainage
+"Rainwater cannot flow because the gutter is clogged",drainage
+"The neighborhood is waterlogged after light rainfall",drainage
+"Open sewer channel is filled with mud",drainage
+"Drain cover is broken beside the pedestrian crossing",drainage
+"Flood water remains because the storm drain is blocked",drainage
+"Wastewater is backing up into nearby homes",drainage
+"The roadside gutter needs cleaning before monsoon",drainage
+"A collapsed culvert is preventing drainage",drainage
+"Bad smell is coming from an overflowing sewer",drainage
+"Standing dirty water has collected around the drain",drainage
+"The underground drainage pipe appears damaged",drainage
+"Silt has completely filled the rainwater channel",drainage
+"Drainage outlet into the river is obstructed",drainage
+"Stray dogs are creating problems in the public park",others
+"A fallen tree is blocking access to the playground",others
+"Public toilet door and fixtures are broken",others
+"Illegal advertising boards cover the community notice area",others
+"Loud construction work continues late at night",others
+"The municipal park bench has been vandalized",others
+"An abandoned vehicle has occupied public space for months",others
+"The pedestrian crossing paint has completely faded",others
+"Unauthorized street vendors are blocking the entrance",others
+"A public drinking fountain has been damaged",others
+"Overgrown bushes are blocking visibility at the corner",others
+"The community playground fence is broken",others
+"A dead animal needs removal from the roadside",others
+"Public signage is missing from the intersection",others
+"The municipal building accessibility ramp is damaged",others
