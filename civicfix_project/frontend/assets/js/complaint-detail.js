@@ -53,20 +53,6 @@ function renderDetail(c) {
           ${c.photo ? `<img src="${c.photo}" alt="Complaint photo" style="max-width:100%; border-radius:4px; margin-top:16px; border:1px solid var(--border);">` : ""}
         </div>
 
-        ${c.department ? `
-        <div class="panel">
-          <h3>AI department routing</h3>
-          <p>Routed to <strong>${escapeHtml(c.department.name)}</strong> as
-            <strong>${escapeHtml(c.category_display)}</strong>.</p>
-          <p class="hint" style="margin-top:8px;">
-            ${c.department_email_status === "sent"
-              ? `Email forwarded to ${escapeHtml(c.department_email_recipient || c.department.contact_email || "the department")}.`
-              : c.department_email_status === "failed"
-                ? "Email delivery is pending retry; the complaint remains safely recorded and assigned."
-                : "Department email is queued."}
-          </p>
-        </div>` : ""}
-
         ${c.address || (c.latitude && c.longitude) ? `
         <div class="panel">
           <h3>Location</h3>
@@ -112,11 +98,10 @@ function renderDetail(c) {
           <form id="status-form">
             <div class="field">
               <label for="status-select">New status</label>
-              <select id="status-select" required>
-                <option value="" selected disabled>Select a different status</option>
-                ${c.status !== "pending" ? `<option value="pending">Pending</option>` : ""}
-                ${c.status !== "in_progress" ? `<option value="in_progress">In Progress</option>` : ""}
-                ${c.status !== "resolved" ? `<option value="resolved">Resolved</option>` : ""}
+              <select id="status-select">
+                <option value="pending" ${c.status === "pending" ? "selected" : ""}>Pending</option>
+                <option value="in_progress" ${c.status === "in_progress" ? "selected" : ""}>In Progress</option>
+                <option value="resolved" ${c.status === "resolved" ? "selected" : ""}>Resolved</option>
               </select>
             </div>
             <div class="field">

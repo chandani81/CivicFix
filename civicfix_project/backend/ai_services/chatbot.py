@@ -40,7 +40,7 @@ INTENTS = [
     Intent(
         "categories",
         ["category", "categories", "what can i report", "types of complaint", "kind of issue"],
-        "CivicFix currently covers: Road Damage, Water Leakage, Garbage, Electricity, Drainage, and Others.",
+        "CivicFix currently covers: Road Damage, Water Leakage, Garbage, Street Light, Drainage, and Others.",
     ),
     Intent(
         "sla_time",

@@ -20,16 +20,10 @@ class ComplaintUpdateInline(admin.TabularInline):
 
 @admin.register(Complaint)
 class ComplaintAdmin(admin.ModelAdmin):
-    list_display = [
-        "id", "title", "category", "department", "status", "is_emergency",
-        "department_email_sent_at", "citizen", "created_at",
-    ]
+    list_display = ["id", "title", "category", "department", "status", "is_emergency", "citizen", "created_at"]
     list_filter = ["status", "category", "is_emergency", "department"]
     search_fields = ["title", "description", "citizen__email"]
     inlines = [ComplaintStatusHistoryInline, ComplaintUpdateInline]
-    readonly_fields = [
-        "department_email_recipient", "department_email_sent_at", "department_email_error"
-    ]
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         # Citizen dropdown: only citizen accounts -- never admin or department staff.

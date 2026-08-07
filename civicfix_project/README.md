@@ -9,7 +9,7 @@ Citizen
 Submit Complaint
   |
   v
-Department (AI-assigned by category + complaint forwarded by email)
+Department (auto-assigned by category)
   |
   v
 Update Complaint Status (Pending -> In Progress -> Resolved)
@@ -164,11 +164,9 @@ just works after either one.
 
 ## 6. Notes for your defense
 
-- **AI categorization** (`backend/ai_services/categorization.py`) automatically
-  loads the trained LinearSVC pipeline from `backend/ai_services/model_artifacts/`.
-  The included 90-example balanced dataset produced 95.7% held-out accuracy
-  and 90.0% mean five-fold cross-validation accuracy. A tested keyword fallback
-  keeps complaint submission working if the artifact cannot be loaded.
+- **AI categorization** (`backend/ai_services/categorization.py`) is a
+  keyword classifier — fast, dependency-free, and swappable for a trained
+  NLP model later.
 - **AI emergency detection** (`backend/ai_services/image_detection.py`) uses
   image statistics (brightness, edge density, color dominance) as a
   stand-in for a trained computer-vision model — both are isolated behind
@@ -181,10 +179,6 @@ just works after either one.
 - **Department SLA warnings** — run `python manage.py check_sla` to flag
   complaints a department hasn't acted on within 48h (6h if emergency) and
   notify admins.
-- **Department email forwarding** — after AI categorization, CivicFix emails
-  the complaint and attached photo to the routed department's configured
-  contact address. Failed delivery is recorded and can be retried with
-  `python manage.py send_pending_department_emails`.
 - **No messaging/chat between citizens and departments** — by design.
   Communication happens only through complaint status history, department
   updates, and admin-sent notifications.

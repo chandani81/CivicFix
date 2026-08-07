@@ -91,9 +91,7 @@ def detect_emergency(image_path: str = None, title: str = "", description: str =
     threshold: score >= 0.5 -> flagged as emergency
     """
     text = f"{title or ''} {description or ''}".lower()
-    # Explicit danger language must be enough to flag a report even when the
-    # citizen cannot safely stop and take a photo.
-    text_score = 0.6 if any(hint in text for hint in _URGENT_TEXT_HINTS) else 0.0
+    text_score = 0.35 if any(hint in text for hint in _URGENT_TEXT_HINTS) else 0.0
     text_reason = "urgent language detected in report" if text_score else ""
 
     image_score, image_reason = (0.0, "no photo provided")

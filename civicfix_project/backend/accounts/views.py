@@ -11,7 +11,6 @@ from .serializers import (
     CreateStaffSerializer,
     LoginSerializer,
     RegisterSerializer,
-    UpdateStaffSerializer,
     UserSerializer,
 )
 
@@ -100,7 +99,7 @@ class StaffDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     permission_classes = [IsAdmin]
     queryset = User.objects.exclude(role=User.Role.CITIZEN)
-    serializer_class = UpdateStaffSerializer
+    serializer_class = UserSerializer
 
 
 class CitizenListView(generics.ListAPIView):

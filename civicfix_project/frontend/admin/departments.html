@@ -28,14 +28,13 @@
                 <tr>
                   <th>Name</th>
                   <th>Category</th>
-                  <th>Routing email</th>
                   <th>Staff</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td colspan="5" class="hint">Loading…</td>
+                  <td colspan="4" class="hint">Loading…</td>
                 </tr>
               </tbody>
             </table>
@@ -64,22 +63,6 @@
 
         <div>
           <div class="panel">
-            <h3>Department email routing</h3>
-            <p class="hint" style="margin-bottom:12px;">Set the real inbox that receives AI-routed complaints.</p>
-            <form id="routing-email-form">
-              <div class="field">
-                <label for="routing-department">Department</label>
-                <select id="routing-department" required></select>
-              </div>
-              <div class="field">
-                <label for="routing-email">Receiving email address</label>
-                <input type="email" id="routing-email" required placeholder="department@example.gov.np">
-              </div>
-              <button class="btn btn-primary btn-block" type="submit">Save routing email</button>
-            </form>
-          </div>
-
-          <div class="panel">
             <h3>Add department</h3>
             <form id="dept-form">
               <div class="field">
@@ -92,7 +75,7 @@
                   <option value="road_damage">Road Damage</option>
                   <option value="water_leakage">Water Leakage</option>
                   <option value="garbage">Garbage</option>
-                  <option value="street_light">Electricity</option>
+                  <option value="street_light">Street Light</option>
                   <option value="drainage">Drainage</option>
                   <option value="others">Others</option>
                 </select>
@@ -165,40 +148,17 @@
         <tr>
           <td>${escapeHtml(d.name)}</td>
           <td><span class="pill">${escapeHtml(d.category_display)}</span></td>
-          <td>${escapeHtml(d.contact_email || "Not configured")}</td>
           <td>${d.staff_count}</td>
           <td>${d.is_active ? "Active" : "Inactive"}</td>
         </tr>
-      `).join("") || `<tr><td colspan="5" class="hint">No departments yet.</td></tr>`;
+      `).join("") || `<tr><td colspan="4" class="hint">No departments yet.</td></tr>`;
 
         const deptSelect = document.getElementById("staff-department");
         deptSelect.innerHTML = departmentsCache.map((d) => `<option value="${d.id}">${escapeHtml(d.name)}</option>`).join("");
-        const routingSelect = document.getElementById("routing-department");
-        routingSelect.innerHTML = departmentsCache.map((d) => `<option value="${d.id}">${escapeHtml(d.name)}</option>`).join("");
-        syncRoutingEmail();
       } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="5" class="hint">Couldn't load departments.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" class="hint">Couldn't load departments.</td></tr>`;
       }
     }
-
-    function syncRoutingEmail() {
-      const id = Number(document.getElementById("routing-department").value);
-      const department = departmentsCache.find((item) => item.id === id);
-      document.getElementById("routing-email").value = department?.contact_email || "";
-    }
-
-    document.getElementById("routing-department").addEventListener("change", syncRoutingEmail);
-
-    document.getElementById("routing-email-form").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const id = Number(document.getElementById("routing-department").value);
-      const contactEmail = document.getElementById("routing-email").value.trim();
-      try {
-        await Api.updateDepartment(id, { contact_email: contactEmail });
-        toast("Department routing email updated.");
-        await loadDepartments();
-      } catch (err) { toast(err.message, "error"); }
-    });
 
     async function loadStaff() {
       const tbody = document.querySelector("#staff-table tbody");

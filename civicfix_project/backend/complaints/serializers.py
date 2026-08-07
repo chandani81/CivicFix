@@ -1,4 +1,3 @@
-from django.core.validators import MaxValueValidator, MinValueValidator
 from rest_framework import serializers
 
 from departments.models import Department
@@ -35,38 +34,18 @@ class ComplaintCreateSerializer(serializers.ModelSerializer):
     """
     Citizen-facing creation form, matching the notebook plan:
     title, description, category (dropdown incl. Road damage, Water leakage,
-    Garbage, Electricity, Drainage, Others), photo upload, location.
+    Garbage, Street light, Drainage, Others), photo upload, location.
     Category may be left blank -> AI auto-categorizes from title/description.
     """
 
-    # Leaflet returns more precision than the original API accepted.  Keep
-    # these fields aligned with the model and validate real coordinate ranges.
-    latitude = serializers.DecimalField(
-        max_digits=12,
-        decimal_places=8,
-        required=False,
-        allow_null=True,
-        validators=[MinValueValidator(-90), MaxValueValidator(90)],
-    )
-    longitude = serializers.DecimalField(
-        max_digits=12,
-        decimal_places=8,
-        required=False,
-        allow_null=True,
-        validators=[MinValueValidator(-180), MaxValueValidator(180)],
-    )
+    latitude = serializers.DecimalField(max_digits=10, decimal_places=7, required=False, allow_null=True)
+    longitude = serializers.DecimalField(max_digits=10, decimal_places=7, required=False, allow_null=True)
     category = serializers.ChoiceField(choices=Complaint.Category.choices, required=False)
 
     class Meta:
         model = Complaint
         fields = ["id", "title", "description", "category", "photo", "latitude", "longitude", "address"]
         read_only_fields = ["id"]
-
-    def validate_photo(self, value):
-        max_size = 10 * 1024 * 1024
-        if value and value.size > max_size:
-            raise serializers.ValidationError("Photo must be 10 MB or smaller.")
-        return value
 
 
 class ComplaintListSerializer(serializers.ModelSerializer):
@@ -91,14 +70,6 @@ class ComplaintDetailSerializer(serializers.ModelSerializer):
     citizen_email = serializers.CharField(source="citizen.email", read_only=True)
     status_history = ComplaintStatusHistorySerializer(many=True, read_only=True)
     updates = ComplaintUpdateSerializer(many=True, read_only=True)
-    department_email_status = serializers.SerializerMethodField()
-
-    def get_department_email_status(self, obj):
-        if obj.department_email_sent_at:
-            return "sent"
-        if obj.department_email_error:
-            return "failed"
-        return "pending"
 
     class Meta:
         model = Complaint
@@ -107,8 +78,6 @@ class ComplaintDetailSerializer(serializers.ModelSerializer):
             "department", "photo", "latitude", "longitude", "address",
             "status", "status_display", "is_emergency", "emergency_confidence",
             "emergency_reason", "auto_categorized", "citizen_email",
-            "department_email_status", "department_email_recipient",
-            "department_email_sent_at",
             "status_history", "updates", "created_at", "updated_at", "resolved_at",
         ]
 

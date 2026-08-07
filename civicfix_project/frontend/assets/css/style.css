@@ -382,14 +382,6 @@ input:focus, select:focus, textarea:focus {
 
 #map-picker, #map-view { height: 270px; overflow: hidden; border: 1px solid var(--border); border-radius: 7px; }
 
-.civic-location-control { border-radius: 5px; box-shadow: 0 1px 6px rgba(2, 55, 88, .28); overflow: hidden; }
-.civic-location-button { display: flex; align-items: center; gap: 7px; min-height: 36px; padding: 0 11px; border: 0; background: #fff; color: var(--primary-dark); font: 800 12px/1.2 Arial, sans-serif; cursor: pointer; }
-.civic-location-button:hover { background: var(--primary-soft); color: var(--primary); }
-.civic-location-button:focus-visible { outline: 3px solid rgba(0, 105, 155, .28); outline-offset: -3px; }
-.civic-location-button:disabled { cursor: wait; opacity: .8; }
-.location-spinner { width: 13px; height: 13px; border: 2px solid #b9cbd6; border-top-color: var(--primary); border-radius: 50%; animation: location-spin .75s linear infinite; }
-@keyframes location-spin { to { transform: rotate(360deg); } }
-
 .timeline { margin: 0; padding: 0; list-style: none; }
 .timeline li { position: relative; margin-left: 5px; padding: 0 0 17px 19px; border-left: 2px solid #d9e5eb; }
 .timeline li:last-child { border-color: transparent; }

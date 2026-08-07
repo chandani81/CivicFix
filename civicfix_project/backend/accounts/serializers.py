@@ -17,10 +17,7 @@ class UserSerializer(serializers.ModelSerializer):
             "id", "email", "first_name", "last_name", "phone",
             "role", "department", "department_name", "created_at",
         ]
-        # A user may edit their profile through /me/, but must never be able
-        # to move themselves to another role or department.  Staff placement
-        # is managed only by an administrator through the staff endpoints.
-        read_only_fields = ["id", "role", "department", "created_at"]
+        read_only_fields = ["id", "role", "created_at"]
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -86,14 +83,7 @@ class CreateStaffSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"department": "Department is required for department staff."})
         if role == User.Role.CITIZEN:
             raise serializers.ValidationError({"role": "Use the public register endpoint for citizens."})
-        if role == User.Role.ADMIN:
-            attrs["department"] = None
         return attrs
-
-    def validate_email(self, value):
-        if User.objects.filter(email__iexact=value).exists():
-            raise serializers.ValidationError("An account with this email already exists.")
-        return value
 
     def create(self, validated_data):
         password = validated_data.pop("password")
@@ -106,30 +96,3 @@ class CreateStaffSerializer(serializers.ModelSerializer):
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField()
     new_password = serializers.CharField(validators=[validate_password])
-
-
-class UpdateStaffSerializer(serializers.ModelSerializer):
-    """Admin-only updates for department staff and administrator accounts."""
-
-    class Meta:
-        model = User
-        fields = ["email", "first_name", "last_name", "phone", "role", "department", "is_active"]
-
-    def validate_email(self, value):
-        qs = User.objects.filter(email__iexact=value)
-        if self.instance:
-            qs = qs.exclude(pk=self.instance.pk)
-        if qs.exists():
-            raise serializers.ValidationError("An account with this email already exists.")
-        return value
-
-    def validate(self, attrs):
-        role = attrs.get("role", self.instance.role)
-        department = attrs.get("department", self.instance.department)
-        if role == User.Role.CITIZEN:
-            raise serializers.ValidationError({"role": "Staff accounts cannot be converted to citizens here."})
-        if role == User.Role.DEPARTMENT and not department:
-            raise serializers.ValidationError({"department": "Department is required for department staff."})
-        if role == User.Role.ADMIN:
-            attrs["department"] = None
-        return attrs

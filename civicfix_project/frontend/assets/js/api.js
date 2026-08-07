@@ -97,9 +97,7 @@ async function refreshAccessToken() {
       });
       if (!res.ok) throw new Error("refresh failed");
       const data = await res.json();
-      // SimpleJWT may rotate refresh tokens. Save the replacement so a later
-      // refresh does not keep using an expired token.
-      Auth.setSession(data.access, data.refresh || null, null);
+      Auth.setSession(data.access, null, null);
       return true;
     } catch (e) {
       Auth.clear();
@@ -140,7 +138,6 @@ const Api = {
 
   listDepartments: () => apiRequest("/departments/"),
   createDepartment: (payload) => apiRequest("/departments/", { method: "POST", body: payload }),
-  updateDepartment: (id, payload) => apiRequest(`/departments/${id}/`, { method: "PATCH", body: payload }),
 
   listComplaints: (query = "") => apiRequest(`/complaints/${query}`),
   getComplaint: (id) => apiRequest(`/complaints/${id}/`),
@@ -151,10 +148,6 @@ const Api = {
   stats: () => apiRequest("/complaints/stats/"),
   notifications: () => apiRequest("/complaints/notifications/"),
   markNotificationRead: (id) => apiRequest(`/complaints/notifications/${id}/read/`, { method: "POST" }),
-
-  reverseGeocode: (latitude, longitude) => apiRequest(
-    `/location/reverse/?latitude=${encodeURIComponent(latitude)}&longitude=${encodeURIComponent(longitude)}`
-  ),
 
   chatbotAsk: (message) => apiRequest("/chatbot/ask/", { method: "POST", body: { message }, auth: false }),
 };
@@ -171,7 +164,7 @@ const CATEGORY_LABELS = {
   road_damage: "Road Damage",
   water_leakage: "Water Leakage",
   garbage: "Garbage",
-  street_light: "Electricity",
+  street_light: "Street Light",
   drainage: "Drainage",
   others: "Others",
 };

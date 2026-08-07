@@ -22,10 +22,10 @@ DEFAULT_DEPARTMENTS = [
         "contact_email": "sanitation@civicfix.local",
     },
     {
-        "name": "Electricity Department",
+        "name": "Electricity & Street Lighting Department",
         "category": Department.Category.STREET_LIGHT,
-        "description": "Handles electricity supply, poles, exposed wires, transformers, and public lighting complaints.",
-        "contact_email": "electricity@civicfix.local",
+        "description": "Handles broken or non-functional street lights.",
+        "contact_email": "streetlight@civicfix.local",
     },
     {
         "name": "Drainage & Sewerage Department",
@@ -43,7 +43,7 @@ DEFAULT_DEPARTMENTS = [
 
 
 class Command(BaseCommand):
-    help = "Seed the default departments (Road Damage, Water Leakage, Garbage, Electricity, Drainage, Others)."
+    help = "Seed the default departments (Road Damage, Water Leakage, Garbage, Street Light, Drainage, Others)."
 
     def handle(self, *args, **options):
         created_count = 0
