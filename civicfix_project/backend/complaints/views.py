@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import generics, permissions, status
 from rest_framework.exceptions import PermissionDenied
@@ -194,12 +195,13 @@ class ComplaintUpdateListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated, IsComplaintParticipant]
 
     def get_complaint(self):
-        complaint = Complaint.objects.get(pk=self.kwargs["pk"])
+        complaint = get_object_or_404(Complaint, pk=self.kwargs["pk"])
         self.check_object_permissions(self.request, complaint)
         return complaint
 
     def get_queryset(self):
-        return ComplaintUpdate.objects.filter(complaint_id=self.kwargs["pk"])
+        complaint = self.get_complaint()
+        return ComplaintUpdate.objects.filter(complaint=complaint)
 
     def perform_create(self, serializer):
         complaint = self.get_complaint()
